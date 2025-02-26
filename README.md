@@ -21,7 +21,7 @@ Open the ui/index.html file in your web browser to test prompts and interact wit
 
 
 ## Approach
-* **Config-Driven Provider Selection:** Providers and their priorities are defined in providers.yaml, making it easy to add/remove models.  
+* **Config-Driven Provider Selection:** Providers are defined in providers.yaml, making it easy to add/remove models.  
 * **Routing & Fallback Logic:** The request first tries the cheapest provider. If it fails (error, timeout, rate limit), it automatically retries with the next provider.  
 * **Token & Cost Tracking:** Logs token usage and estimated cost per request in logs/usage.log.  
 * **Modular Structure:** Each component (routing, requests, tracking) is in a separate module for maintainability.  
