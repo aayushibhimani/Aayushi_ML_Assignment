@@ -1,0 +1,12 @@
+2025-02-26 23:23:41,477 - src.config_loader - INFO - Loaded configuration with 3 providers
+2025-02-26 23:23:41,477 - src.cost_tracker - INFO - Initialized CostTracker
+2025-02-26 23:24:06,885 - src.router - INFO - Trying provider: Google Gemini 2.0 Flash
+{"timestamp": "2025-02-26T23:24:17.689125", "provider": "Google Gemini 2.0 Flash", "prompt_tokens": 5, "completion_tokens": 999, "total_tokens": 1004, "cost": 0.0, "success": true, "duration_seconds": 10.8038}
+2025-02-26 23:24:51,275 - src.router - INFO - Trying provider: Google Gemini 2.0 Flash
+{"timestamp": "2025-02-26T23:25:01.477380", "provider": "Google Gemini 2.0 Flash", "prompt_tokens": 5, "completion_tokens": 997, "total_tokens": 1002, "cost": 0.0, "success": true, "duration_seconds": 10.202}
+2025-02-26 23:25:47,444 - src.router - INFO - Trying provider: Google Gemini 2.0 Flash
+{"timestamp": "2025-02-26T23:25:57.524895", "provider": "Google Gemini 2.0 Flash", "prompt_tokens": 5, "completion_tokens": 992, "total_tokens": 997, "cost": 0.0, "success": true, "duration_seconds": 10.0806}
+2025-02-26 23:26:17,428 - src.router - INFO - Trying provider: Google Gemini 2.0 Flash
+{"timestamp": "2025-02-26T23:26:27.164797", "provider": "Google Gemini 2.0 Flash", "prompt_tokens": 5, "completion_tokens": 997, "total_tokens": 1002, "cost": 0.0, "success": true, "duration_seconds": 9.7359}
+2025-02-26 23:26:50,496 - src.router - INFO - Trying provider: Google Gemini 2.0 Flash
+{"timestamp": "2025-02-26T23:27:02.454612", "provider": "Google Gemini 2.0 Flash", "prompt_tokens": 5, "completion_tokens": 1296, "total_tokens": 1301, "cost": 0.0, "success": true, "duration_seconds": 11.9582}
