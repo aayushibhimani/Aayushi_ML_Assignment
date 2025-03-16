@@ -20,18 +20,35 @@ uvicorn app:app --host 127.0.0.1 --port 8000
 Open the ui/index.html file in your web browser to test prompts and interact with the API. 
 
 
-## Approach
-* **Config-Driven Provider Selection:** Providers are defined in providers.yaml, making it easy to add/remove models.  
-* **Routing & Fallback Logic:** The request first tries the cheapest provider. If it fails (error, timeout, rate limit), it automatically retries with the next provider.  
-* **Token & Cost Tracking:** Logs token usage and estimated cost per request in logs/usage.log.  
-* **Modular Structure:** Each component (routing, requests, tracking) is in a separate module for maintainability.  
+##  Key Features
+- **Config-Driven Provider Management**
+  - Providers defined in `providers.yaml` for easy management.
+  - Customize API keys, costs, timeouts, and retries from one central location.
+- **Smart Routing & Fallback Logic**
+  - Prioritizes providers based on the lowest cost per 1K tokens.
+  - Automatically falls back to the next cheapest available provider upon encountering an error, timeout, or rate limit.
+- **Circuit Breaker with Penalty Duration**
+  - Providers temporarily disabled after 3 consecutive failures.
+  - Circuit breaker cooldown period is set to 60 seconds.
+  - Providers with recent failures (within 5 minutes) are penalized, decreasing their selection priority.
+  - Clearly Defined Circuit Breaker States:
+    - Closed: Provider is operating normally; requests are routed without restrictions.
+    - Open: Provider disabled after consecutive failures; temporarily stops sending requests for the cooldown period.
+    - Half-Open: After the cooldown period, the provider is tested with a limited number of trial requests. If successful, the state returns to Closed, if unsuccessful, the state reverts to Open.
+    
+- **Real-Time Comprehensive Token & Cost Tracking**
+  - Logs detailed usage statistics including - Prompt tokens, Completion tokens, Total tokens, Cost per request, Success/failure status
+  - Usage data stored in `logs/usage.logs`
+
+
+
 
 ## How Each File Works
 * **app.py** - Main FastAPI app, loads configuration, exposes API endpoints (/generate).
 * **providers.yaml** - Defines available LLM providers, their API keys, and cost per 1K tokens.
-* **config_loader.py** - Reads and validates providers.yaml.
-* **router.py** - Routes requests to the cheapest working LLM provider.
-* **request_handler.py** - Calls the selected provider's API and handles errors.
+* **config_loader.py** - Loads and validates provider configurations from providers.yaml.
+* **router.py** - Routes requests intelligently, prioritizing providers based on cost, reliability, and recent performance.
+* **request_handler.py** - Handles API calls, responses, error handling, and retries per provider.
 * **cost_tracker.py** - Logs and calculates token usage & cost per request.
 * **index.html, script.js, styles.css** - Simple UI for testing prompts.
 
