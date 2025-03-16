@@ -1,5 +1,5 @@
 # app.py
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import uvicorn
 import logging
@@ -8,7 +8,6 @@ from src.router import LLMRouter
 from src.config_loader import ConfigLoader
 from src.cost_tracker import CostTracker
 from fastapi.middleware.cors import CORSMiddleware
-
 
 logging.basicConfig(
     level=logging.INFO,
@@ -24,16 +23,13 @@ os.makedirs("logs", exist_ok=True)
 
 app = FastAPI(title="MultiLLM Cost-Optimized API")
 
-
-app = FastAPI(title="MultiLLM Cost-Optimized API")
-
-#CORS
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  
-    allow_headers=["*"],  
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 config_loader = ConfigLoader("providers.yaml")
