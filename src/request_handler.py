@@ -26,6 +26,7 @@ class RequestHandler:
 
     async def _call_mistral(self, provider: Dict[str, Any], prompt: str, 
                             max_tokens: int, temperature: float) -> Dict[str, Any]:
+        """Call Mistral AI API"""
         endpoint = provider["endpoint"]
         api_key = provider["api_key"]
         model = provider["model"]
@@ -33,7 +34,7 @@ class RequestHandler:
         async with aiohttp.ClientSession() as session:
             headers = {
                 "Content-Type": "application/json",
-                "Authorization": f"Bearer {api_key}"  
+                "Authorization": f"Bearer {api_key}"  # Mistral requires Bearer token
             }
 
             payload = {
@@ -56,6 +57,7 @@ class RequestHandler:
 
                         result = await response.json()
 
+                        # Extract response text and token counts
                         text = result["choices"][0]["message"]["content"]
                         prompt_tokens = result["usage"]["prompt_tokens"]
                         completion_tokens = result["usage"]["completion_tokens"]
@@ -77,7 +79,7 @@ class RequestHandler:
                 except Exception as e:
                     if attempt < max_retries:
                         logger.warning(f"Error calling Mistral API, attempt {attempt+1}/{max_retries+1}: {str(e)}")
-                        await asyncio.sleep(1) 
+                        await asyncio.sleep(1)  # Simple backoff
                         continue
                     raise
 
@@ -102,7 +104,7 @@ class RequestHandler:
                 ],
                 "max_tokens": max_tokens,
                 "temperature": temperature,
-                "stream": False  
+                "stream": False  # Non-streaming request
             }
 
             timeout = aiohttp.ClientTimeout(total=provider.get("timeout", 30))
@@ -144,72 +146,41 @@ class RequestHandler:
                     raise
 
 
-    async def _call_google_gemini(self, provider: Dict[str, Any], prompt: str,
-                                    max_tokens: int, temperature: float) -> Dict[str, Any]:
-        base_endpoint = "https://generativelanguage.googleapis.com/v1beta/models/"
-        model_name = provider["model"]
-        endpoint = f"{base_endpoint}{model_name}:generateContent"
+    async def _call_google_gemini(self, provider: Dict[str, Any], prompt: str, max_tokens: int, temperature: float) -> Dict[str, Any]:
+        api_key = provider["api_key"]
+        model = provider["model"]
 
-        api_key = provider.get("api_key", "").strip()
-        if not api_key:
-            logger.error("Google Gemini API key is missing")
-            raise Exception("Google Gemini API key is missing")
+        try:
+            genai.configure(api_key=api_key)
+            client = genai.GenerativeModel(model)
 
-        headers = {
-            "Content-Type": "application/json"
-        }
-        params = {"key": api_key}
+            token_count_response = client.count_tokens(prompt)
+            prompt_tokens = token_count_response.total_tokens 
 
-        payload = {
-            "contents": [{
-                "parts": [{"text": prompt}]
-            }],
-            "generationConfig": {
-                "maxOutputTokens": max_tokens,
-                "temperature": temperature
+            # Generate response
+            response = client.generate_content(
+                prompt,
+                generation_config={"max_output_tokens": max_tokens, "temperature": temperature}
+            )
+
+            if not response or not hasattr(response, "text"):
+                raise ValueError("Empty response from Google Gemini")
+
+            text = response.text
+
+            completion_token_response = client.count_tokens(text)
+            completion_tokens = completion_token_response.total_tokens
+
+            total_tokens = prompt_tokens + completion_tokens
+
+            return {
+                "text": text,
+                "prompt_tokens": prompt_tokens,
+                "completion_tokens": completion_tokens,
+                "total_tokens": total_tokens
             }
-        }
 
-        timeout = aiohttp.ClientTimeout(total=provider.get("timeout", 30))
-        max_retries = provider.get("max_retries", 2)
+        except Exception as e:
+            logger.error(f"Google Gemini API error: {str(e)}")
+            raise
 
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            for attempt in range(max_retries + 1):
-                try:
-                    async with session.post(endpoint, headers=headers, json=payload, params=params) as response:
-                        if response.status != 200:
-                            error_text = await response.text()
-                            logger.error(f"Gemini API error: {error_text}")
-                            raise Exception(f"Gemini API returned {response.status}: {error_text}")
-
-                        result = await response.json()
-
-                        if "candidates" not in result or not result["candidates"]:
-                            raise Exception("Empty response from Gemini API")
-
-                        text = result["candidates"][0].get("content", {}).get("parts", [{}])[0].get("text", "")
-                        if not text:
-                            raise Exception("No text output in Gemini API response")
-
-                        usage = result.get("usageMetadata", {})
-                        prompt_tokens = usage.get("promptTokenCount", 0)
-                        completion_tokens = usage.get("candidatesTokenCount", 0)
-                        total_tokens = prompt_tokens + completion_tokens
-
-                        logger.debug("Gemini call succeeded on attempt %d", attempt + 1)
-                        return {
-                            "text": text,
-                            "prompt_tokens": prompt_tokens,
-                            "completion_tokens": completion_tokens,
-                            "total_tokens": total_tokens
-                        }
-                except asyncio.TimeoutError:
-                    logger.warning("Timeout for Gemini API, attempt %d/%d", attempt + 1, max_retries + 1)
-                    if attempt == max_retries:
-                        raise Exception("Gemini API timeout")
-                    await asyncio.sleep(1)
-                except Exception as e:
-                    logger.warning("Error calling Gemini API, attempt %d/%d: %s", attempt + 1, max_retries + 1, str(e))
-                    if attempt == max_retries:
-                        raise
-                    await asyncio.sleep(1)

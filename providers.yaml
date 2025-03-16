@@ -1,11 +1,11 @@
 providers:
-  - name: "Google Gemini 2.0 Flash"
-    type: "google_gemini"
-    model: "gemini-2.0-flash"
-    endpoint: "https://generativelanguage.googleapis.com/v1beta/models/"
+  - name: "Mistral AI - OpenWeight Models"
+    type: "mistral"
+    endpoint: "https://api.mistral.ai/v1/chat/completions"  
+    model: "mistral-medium"  
     api_key: ""  
-    cost_per_1k_tokens: 0.0000  
-    timeout: 15
+    cost_per_1k_tokens: 0.0003  
+    timeout: 30
     max_retries: 2
 
   - name: "DeepSeek Chat"
@@ -14,20 +14,17 @@ providers:
     model: "deepseek-chat"  
     api_key: ""  
     cost_per_1k_tokens: 0.00027  
-    timeout: 15
+    timeout: 30
     max_retries: 2
 
-  - name: "Mistral AI - OpenWeight Models"
-    type: "mistral"
-    endpoint: "https://api.mistral.ai/v1/chat/completions"  
-    model: "mistral-medium"  
+  - name: "Google Gemini 2.0 Flash"
+    type: "google_gemini"
+    model: "gemini-2.0-flash"
+    endpoint: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash"
     api_key: ""  
-    cost_per_1k_tokens: 0.0003  
-    timeout: 15
+    cost_per_1k_tokens: 0.0000  
+    timeout: 30
     max_retries: 2
-
-
-
 
 
 
