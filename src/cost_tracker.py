@@ -1,4 +1,3 @@
-#src/cost_tracker.py
 import logging
 import json
 from datetime import datetime
@@ -14,13 +13,12 @@ class CostTracker:
         self.usage_history = []
         self.provider_stats = {}
 
-        # Ensure logs directory exists
         os.makedirs(os.path.dirname(log_file), exist_ok=True)
 
         logger.info("Initialized CostTracker")
     
     def record_usage(self, provider_name: str, prompt_tokens: int, completion_tokens: int,
-                    cost: float, success: bool, duration: float):
+                     cost: float, success: bool, duration: float):
         timestamp = datetime.now().isoformat()
 
         usage_data = {
@@ -45,7 +43,8 @@ class CostTracker:
                 "failed_requests": 0,
                 "total_prompt_tokens": 0,
                 "total_completion_tokens": 0,
-                "total_cost": 0.0
+                "total_cost": 0.0,
+                "total_latency": 0.0,
             }
         
         stats = self.provider_stats[provider_name]
@@ -56,6 +55,7 @@ class CostTracker:
             stats["total_prompt_tokens"] += prompt_tokens
             stats["total_completion_tokens"] += completion_tokens
             stats["total_cost"] += cost
+            stats["total_latency"] += duration  
         else:
             stats["failed_requests"] += 1
 
@@ -70,6 +70,14 @@ class CostTracker:
         total_tokens = sum(stats["total_prompt_tokens"] + stats["total_completion_tokens"] 
                           for stats in self.provider_stats.values())
 
+        for provider in self.provider_stats:
+            provider_data = self.provider_stats[provider]
+            if provider_data["successful_requests"] > 0:
+                avg_latency = provider_data["total_latency"] / provider_data["successful_requests"]
+            else:
+                avg_latency = None
+            provider_data["avg_latency"] = round(avg_latency, 4) if avg_latency else "N/A"
+
         return {
             "overall": {
                 "total_cost": round(total_cost, 6),
@@ -79,3 +87,4 @@ class CostTracker:
             "providers": self.provider_stats,
             "recent_requests": self.usage_history[-10:]
         }
+

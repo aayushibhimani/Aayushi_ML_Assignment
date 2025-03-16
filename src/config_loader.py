@@ -39,3 +39,4 @@ class ConfigLoader:
                 raise ValueError(f"Invalid provider type: {provider['type']}")
 
         logger.info(f"Loaded configuration with {len(config['providers'])} providers")
+
